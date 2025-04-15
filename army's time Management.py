@@ -1,6 +1,70 @@
 import sqlite3
 from datetime import datetime, timedelta
 
+# ایجاد پایگاه داده برای کاربران
+def init_user_db():
+    conn = sqlite3.connect("scheduler.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL UNIQUE,
+                        password TEXT NOT NULL
+                      )''')
+    conn.commit()
+    conn.close()
+
+# ثبت‌نام کاربر جدید
+def register_user(username, password):
+    conn = sqlite3.connect("scheduler.db")
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''INSERT INTO users (username, password)
+                          VALUES (?, ?)''', (username, password))
+        conn.commit()
+        print("کاربر با موفقیت ثبت شد!")
+    except sqlite3.IntegrityError:
+        print("نام کاربری قبلاً ثبت شده است!")
+    finally:
+        conn.close()
+
+# ورود کاربر
+def login_user(username, password):
+    conn = sqlite3.connect("scheduler.db")
+    cursor = conn.cursor()
+    cursor.execute('''SELECT * FROM users WHERE username = ? AND password = ?''', (username, password))
+    user = cursor.fetchone()
+    conn.close()
+    return user is not None
+
+# اجرای برنامه
+if __name__ == "__main__":
+    init_user_db()
+    print("سیستم مدیریت دسترسی آماده است!")
+
+    while True:
+        print("\n1. ثبت‌نام")
+        print("2. ورود")
+        print("3. خروج")
+        choice = input("انتخاب کنید: ")
+
+        if choice == "1":
+            username = input("نام کاربری: ")
+            password = input("رمز عبور: ")
+            register_user(username, password)
+        elif choice == "2":
+            username = input("نام کاربری: ")
+            password = input("رمز عبور: ")
+            if login_user(username, password):
+                print("ورود موفقیت‌آمیز!")
+                break  # پس از ورود موفق به منوی اصلی منتقل می‌شوید
+            else:
+                print("نام کاربری یا رمز عبور اشتباه است!")
+        elif choice == "3":
+            print("خروج از سیستم.")
+            break
+        else:
+            print("انتخاب نامعتبر!")
+
 # ایجاد پایگاه داده و جدول‌ها
 def init_db():
     conn = sqlite3.connect("scheduler.db")
